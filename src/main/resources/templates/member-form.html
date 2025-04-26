@@ -202,20 +202,40 @@
         }
     });
 
-    // 폼 제출 시 처리
-    document.querySelector('form').addEventListener('submit', function(e) {
-        const departmentSelect = document.getElementById('departmentName');
-        if (departmentSelect.value === 'new_department') {
-            const newDepartmentName = document.getElementById('newDepartmentName').value;
-            if (newDepartmentName) {
-                // hidden input으로 추가하고 select 값 무시
-                departmentSelect.value = newDepartmentName;
-            } else {
-                e.preventDefault();
-                alert('새 부서명을 입력해주세요.');
-            }
+// 폼 제출 시 처리
+document.querySelector('form').addEventListener('submit', function(e) {
+    e.preventDefault(); // 폼 제출을 일시 중지
+
+    const departmentSelect = document.getElementById('departmentName');
+    const form = this;
+
+    if (departmentSelect.value === 'new_department') {
+        const newDepartmentName = document.getElementById('newDepartmentName').value;
+        if (newDepartmentName) {
+            // 기존 departmentName input 제거 (선택사항)
+            const existingInputs = form.querySelectorAll('input[name="departmentName"]');
+            existingInputs.forEach(input => input.remove());
+
+            // hidden input으로 새 부서명 추가
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'departmentName';
+            hiddenInput.value = newDepartmentName;
+            form.appendChild(hiddenInput);
+
+            // select 요소 비활성화 또는 이름 변경 (선택사항)
+            departmentSelect.name = 'originalDepartmentSelect';
+
+            // 이제 폼 제출
+            form.submit();
+        } else {
+            alert('새 부서명을 입력해주세요.');
         }
-    });
+    } else {
+        // 기존 부서 선택 시 바로 제출
+        form.submit();
+    }
+});
 </script>
 </body>
 </html>
