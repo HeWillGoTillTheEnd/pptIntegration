@@ -3,14 +3,12 @@ package com.example.demo.controller;
 
 import com.example.demo.entity.Department;
 import com.example.demo.entity.Member;
-import com.example.demo.repository.MemberRepository;
 import com.example.demo.service.DepartmentService;
 import com.example.demo.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
@@ -134,5 +132,25 @@ public class MemberController {
         }
 
         return "redirect:/submission-status";
+    }
+
+    // 멤버 삭제 폼 페이지 표시
+    @GetMapping("/members/delete")
+    public String showDeleteMemberForm(Model model) {
+        List<Member> members = memberService.getAllMembers();
+        model.addAttribute("members", members);
+        return "deleteMember";
+    }
+
+    // 멤버 삭제 처리
+    @PostMapping("/members/delete")
+    public String deleteMember(@RequestParam("id") Long id, RedirectAttributes redirectAttributes) {
+        try {
+            memberService.deleteMember(id);
+            redirectAttributes.addFlashAttribute("successMessage", "멤버가 성공적으로 삭제되었습니다.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "멤버 삭제 중 오류가 발생했습니다: " + e.getMessage());
+        }
+        return "redirect:/members";
     }
 }

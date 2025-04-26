@@ -107,4 +107,24 @@ public class MemberService {
 
         return true;
     }
+
+    /**
+     * ID로 멤버 삭제
+     */
+    @Transactional
+    public void deleteMember(Long id) {
+        Member member = memberRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다: " + id));
+
+        // 파일이 있다면 파일도 삭제
+        if (member.getPptFilePath() != null && !member.getPptFilePath().isEmpty()) {
+            File pptFile = new File(member.getPptFilePath());
+            if (pptFile.exists()) {
+                pptFile.delete();
+            }
+        }
+
+        memberRepository.delete(member);
+    }
+
 }
