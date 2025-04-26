@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+    <title>멤버 등록</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            padding: 30px;
+        }
+
+        h1 {
+            color: #3a6ea5;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+            font-size: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            transition: border-color 0.3s;
+            font-size: 16px;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            border-color: #3a6ea5;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(58, 110, 165, 0.2);
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .checkbox-container input {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+        }
+
+        .file-input {
+            background-color: #f9fafb;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px dashed #cbd5e0;
+        }
+
+        .file-input input {
+            width: 100%;
+        }
+
+        button, .btn {
+            background-color: #3a6ea5;
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            width: 100%;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+            display: block;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        button:hover, .btn:hover {
+            background-color: #2d5a8a;
+        }
+
+        .btn-success {
+            background-color: #48bb78;
+            margin-top: 20px;
+        }
+
+        .btn-success:hover {
+            background-color: #38a169;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 20px;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>멤버 등록</h1>
+    <form action="/members" method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="name">이름</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+
+        <div class="form-group">
+            <label for="email">이메일</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+
+        <div class="form-group">
+            <label for="departmentName">부서</label>
+            <select id="departmentName" name="departmentName" required>
+                <option value="">부서 선택</option>
+                <option th:each="dept : ${departments}" th:value="${dept.name}" th:text="${dept.name}"></option>
+                <!-- 새 부서 입력 옵션 -->
+                <option value="new_department">직접 입력</option>
+            </select>
+        </div>
+
+        <!-- 새 부서명 입력 필드 (기본적으로 숨김) -->
+        <div class="form-group" id="newDepartmentGroup" style="display: none;">
+            <label for="newDepartmentName">새 부서명</label>
+            <input type="text" id="newDepartmentName" name="newDepartmentName">
+        </div>
+
+        <div class="form-group">
+            <label for="position">직위</label>
+            <input type="text" id="position" name="position" required>
+        </div>
+
+        <div class="form-group">
+            <label for="orders">정렬순서</label>
+            <input type="number" id="orders" name="orders">
+        </div>
+
+        <div class="form-group checkbox-container">
+            <input type="checkbox" id="isSubmissionRequired" name="isSubmissionRequired" value="true">
+            <label for="isSubmissionRequired">제출 대상 여부</label>
+        </div>
+
+        <div class="form-group">
+            <label for="pptFile">PPT 파일 업로드</label>
+            <div class="file-input">
+                <input type="file" id="pptFile" name="pptFile" accept=".ppt,.pptx">
+            </div>
+        </div>
+
+        <button type="submit">등록</button>
+
+        <a href="/members" class="btn btn-success">멤버 목록 보기</a>
+    </form>
+</div>
+
+<script>
+    // 부서 선택 시 직접 입력 필드 토글
+    document.getElementById('departmentName').addEventListener('change', function() {
+        const newDepartmentGroup = document.getElementById('newDepartmentGroup');
+        if (this.value === 'new_department') {
+            newDepartmentGroup.style.display = 'block';
+            document.getElementById('newDepartmentName').setAttribute('required', 'required');
+        } else {
+            newDepartmentGroup.style.display = 'none';
+            document.getElementById('newDepartmentName').removeAttribute('required');
+        }
+    });
+
+    // 폼 제출 시 처리
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const departmentSelect = document.getElementById('departmentName');
+        if (departmentSelect.value === 'new_department') {
+            const newDepartmentName = document.getElementById('newDepartmentName').value;
+            if (newDepartmentName) {
+                // hidden input으로 추가하고 select 값 무시
+                departmentSelect.value = newDepartmentName;
+            } else {
+                e.preventDefault();
+                alert('새 부서명을 입력해주세요.');
+            }
+        }
+    });
+</script>
+</body>
+</html>
