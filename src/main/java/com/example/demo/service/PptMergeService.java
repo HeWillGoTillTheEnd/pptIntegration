@@ -5,7 +5,10 @@ import com.example.demo.entity.Member;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.xslf.usermodel.XMLSlideShow;
 import org.apache.poi.xslf.usermodel.XSLFSlide;
+import org.apache.poi.xslf.usermodel.XSLFSlideLayout;
+import org.apache.poi.xslf.usermodel.XSLFSlideMaster;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -21,7 +24,8 @@ import java.util.stream.Collectors;
 @Slf4j
 
 public class PptMergeService {
-    @Value("${report.temp.path:./temp}")
+
+    @Value("${report.temp.path}")
     private String reportTempPath;
 
     /**
@@ -55,9 +59,20 @@ public class PptMergeService {
 
         log.info("Merging {} PPT files for department {}", validPptFiles.size(), department.getName());
 
-        // 5. 슬라이드쇼 생성 및 병합
-        try (XMLSlideShow mergedPpt = new XMLSlideShow()) {
-            // 각 PPT 파일 처리
+// basePpt.pptx 열기
+        ClassPathResource basePptResource = new ClassPathResource("pptfile/basePpt.pptx");
+
+        try (InputStream basePptInputStream = basePptResource.getInputStream();
+             XMLSlideShow mergedPpt = new XMLSlideShow(basePptInputStream)) {
+
+            List<XSLFSlide> baseSlides = mergedPpt.getSlides();
+            if (baseSlides.isEmpty()) {
+                throw new IOException("basePpt.pptx must have at least one slide!");
+            }
+
+            // basePpt의 첫 번째 슬라이드를 저장
+            XSLFSlide baseSlideTemplate = baseSlides.get(0);
+
             for (String pptFilePath : validPptFiles) {
                 log.info("Processing PPT file: {}", pptFilePath);
                 File pptFile = new File(pptFilePath);
@@ -65,22 +80,24 @@ public class PptMergeService {
                 try (FileInputStream fis = new FileInputStream(pptFile);
                      XMLSlideShow srcPpt = new XMLSlideShow(fis)) {
 
-                    // 마스터 슬라이드 및 테마 정보 복사 시도
-                    // 참고: 완벽한 복사는 이 방법으로도 불가능할 수 있음
-
-                    // 모든 슬라이드 복사
                     for (XSLFSlide srcSlide : srcPpt.getSlides()) {
-                        XSLFSlide newSlide = mergedPpt.createSlide();
-                        // 슬라이드 내용 가져오기 - 기본 레이아웃도 최대한 유지 시도
+                        // baseSlideTemplate을 복제한 새 슬라이드 생성
+                        XSLFSlide newSlide = mergedPpt.createSlide(baseSlideTemplate.getSlideLayout());
+
+                        // base 템플릿 내용 복사
+                        newSlide.importContent(baseSlideTemplate);
+
+                        // srcSlide의 내용으로 덮어쓰기 (이 부분은 선택적)
                         newSlide.importContent(srcSlide);
                     }
                 } catch (Exception e) {
-                    // 개별 파일 처리 오류 기록하고 계속 진행
                     log.error("Error processing file {}: {}", pptFilePath, e.getMessage());
                 }
             }
 
-            // 6. 저장
+            // 🔥 병합 완료 후 첫 번째 템플릿 슬라이드 삭제
+            mergedPpt.removeSlide(0);
+            // 저장
             try (FileOutputStream out = new FileOutputStream(mergedFilePath.toFile())) {
                 mergedPpt.write(out);
             }
@@ -93,5 +110,4 @@ public class PptMergeService {
 
         return mergedFilePath.toString();
     }
-
 }

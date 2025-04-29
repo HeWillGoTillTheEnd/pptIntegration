@@ -26,7 +26,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final DepartmentService departmentService;
 
-    private String fileUploadPath = "C:\\Users\\Legion\\Desktop\\testt\\demo\\src\\main\\resources\\files";
+    private String fileUploadPath = "./files";
 
     public List<Member> getAllMembers() {
         return memberRepository.findAll();

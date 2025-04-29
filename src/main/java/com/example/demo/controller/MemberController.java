@@ -27,14 +27,18 @@ public class MemberController {
     @GetMapping("/members")
     public String showMemberList(Model model) {
         List<Member> members = memberService.getAllMembers();
+        List<Department> departments = departmentService.getAllDepartments();
         model.addAttribute("members", members);
+        model.addAttribute("departments", departments);
         return "member-list";
     }
 
     // 멤버 등록 페이지 표시
     @GetMapping("/members/new")
     public String showMemberForm(Model model) {
+        List<Member> members  = memberService.getAllMembers();
         List<Department> departments = departmentService.getAllDepartments();
+        model.addAttribute("members", members);
         model.addAttribute("departments", departments);
         return "member-form";
     }

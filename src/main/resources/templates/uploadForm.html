@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>파일 업로드</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+
+    body {
+      background-color: #f5f7fa;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 30px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      color: #3a6ea5;
+      margin-bottom: 20px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    select, input[type="file"] {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      padding: 10px;
+      background-color: #3a6ea5;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+        .btn {
+        background-color: #3a6ea5;
+        color: white;
+        border: none;
+        padding: 14px 20px;
+        width: 100%;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        transition: background-color 0.3s;
+        margin-top: 10px;
+        display: block;
+        text-align: center;
+        text-decoration: none;
+    }
+
+    button:hover {
+      background-color: #2d5a8a;
+    }
+
+    .btn-success {
+        background-color: #48bb78;
+    }
+
+    .btn-success:hover {
+        background-color: #38a169;
+    }
+
+    .message {
+      text-align: center;
+      margin-top: 20px;
+      font-weight: 500;
+    }
+
+    .success {
+      color: #38a169;
+    }
+
+    .error {
+      color: #e53e3e;
+    }
+
+    .back-button {
+      display: block;
+      text-align: center;
+      margin-top: 30px;
+      text-decoration: none;
+      color: #3a6ea5;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>추가 파일 업로드</h1>
+
+  <form action="/departments/upload" method="post" enctype="multipart/form-data">
+    <select name="departmentId" required>
+      <option value="">부서를 선택하세요</option>
+      <option th:each="dept : ${departments}" th:value="${dept.id}" th:text="${dept.name}"></option>
+    </select>
+
+    <input type="file" name="file" required>
+
+    <button type="submit">파일 업로드</button>
+  </form>
+
+  <div class="message success" th:if="${param.success}">
+    파일이 성공적으로 업로드되었습니다.
+  </div>
+
+  <div class="message error" th:if="${param.error}">
+    파일 업로드에 실패했습니다.
+  </div>
+
+  <div class="btn-group">
+    <a href="/members" class="btn btn-success">멤버 목록 보기</a>
+  </div>
+</div>
+</body>
+</html>

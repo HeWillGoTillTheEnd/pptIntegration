@@ -24,12 +24,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.time.temporal.WeekFields;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,10 +41,10 @@ public class ReportService {
     private final JavaMailSender mailSender;
     private final PptMergeService pptMergeService;
 
-    @Value("${file.upload.path:./uploads}")
+    @Value("${file.upload.path}")
     private String fileUploadPath;
 
-    @Value("${report.temp.path:./temp}")
+    @Value("${report.temp.path")
     private String reportTempPath;
 
     /**
@@ -88,7 +87,7 @@ public class ReportService {
 
         // 미제출 멤버 확인
         List<Member> nonSubmitters = submissionMembers.stream()
-                .filter(member -> member.getPptFilePath() == null || member.getPptFilePath().trim().isEmpty())
+                .filter(member -> member.getIsSubmissionRequired() && member.getPptFilePath() == null || member.getPptFilePath().trim().isEmpty() )
                 .collect(Collectors.toList());
 
         // 미제출 멤버에게 알림 메일 발송
@@ -236,8 +235,15 @@ public class ReportService {
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
         helper.setTo("sskim@secuwow.com");
-        helper.setSubject("주간보고 건");
-        helper.setText("주간메일 전송드립니다.\n\n부서: " + department.getName());
+        helper.setSubject(LocalDateTime.now().getMonthValue()+"월 " +getCurrentWeekNumber()+"주차 "+department.getName()+"주간보고 송부 件");
+        helper.setText("안녕하세요\n" +
+                "\n" +
+                        "시큐와우 주간보고 관리 봇입니다.\n" +
+                        "\n" +
+                        "\n" +
+                        "금주 작성한 "+department.getName()+" 주간보고 전달드립니다.\n" +
+                        "\n\n" +
+                        "감사합니다.");
 
         // 파일 첨부
         for (String filePath : filePaths) {
@@ -259,5 +265,35 @@ public class ReportService {
         if (!tempDir.exists()) {
             tempDir.mkdirs();
         }
+    }
+
+    public int getCurrentWeekNumber() {
+        LocalDate today = LocalDate.now();
+
+        // 한국은 기본 Locale이 ISO (월요일 시작)
+        WeekFields weekFields = WeekFields.of(Locale.getDefault());
+
+        return today.get(weekFields.weekOfMonth());
+    }
+
+    @Transactional
+    public void clearReports() {
+        // 1. 모든 Member 가져오기
+        List<Member> members = memberRepository.findAll();
+        for (Member member : members) {
+            member.setPptFilePath(null);   // pptFilePath 초기화
+            member.setPptFileTitle(null);  // pptFileTitle 초기화
+        }
+        memberRepository.saveAll(members); // 일괄 저장
+
+        // 2. 모든 Department 가져오기
+        List<Department> departments = departmentRepository.findAll();
+        for (Department department : departments) {
+            department.setSubmission(false);  // submission을 false로
+            department.getAdditionalFilePaths().clear();   // 추가 파일 리스트 비우기
+        }
+        departmentRepository.saveAll(departments); // 일괄 저장
+
+        log.info("All members' PPT info reset and all departments' submission set to false.");
     }
 }
