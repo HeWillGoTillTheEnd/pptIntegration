@@ -44,7 +44,7 @@ public class ReportService {
     @Value("${file.upload.path}")
     private String fileUploadPath;
 
-    @Value("${report.temp.path")
+    @Value("${report.temp.path}")
     private String reportTempPath;
 
     /**
